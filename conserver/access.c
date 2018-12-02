@@ -148,6 +148,7 @@ AccType(INADDR_STYPE *addr, char **peername)
     so = sizeof(*addr);
 
 #if USE_IPV6
+    so = sizeof(struct sockaddr_in6);
     error =
 	getnameinfo((struct sockaddr *)addr, so, ipaddr, sizeof(ipaddr),
 		    NULL, 0, NI_NUMERICHOST);
