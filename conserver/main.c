@@ -1760,7 +1760,7 @@ main(int argc, char **argv)
 		remote++;
 	    setproctitle("master: port %hu, %d local, %d remote",
 # if USE_IPV6
-			 config->primaryport,
+			 (unsigned short)strtol(config->primaryport, NULL, 10),
 # elif USE_UNIX_DOMAIN_SOCKETS
 			 0,
 # else

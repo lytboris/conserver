@@ -5374,7 +5374,12 @@ ReReadCfg(int fd, int msfd)
 		local += pGE->imembers;
 	    for (pRC = pRCList; (REMOTE *)0 != pRC; pRC = pRC->pRCnext)
 		remote++;
-	    setproctitle("master: port %hu, %d local, %d remote", bindPort,
+	    setproctitle("master: port %hu, %d local, %d remote",
+# if USE_IPV6
+			 (unsigned short)strtol(config->primaryport, NULL, 10),
+#else
+			 bindPort,
+#endif
 			 local, remote);
 	} else
 	    setproctitle("group %u: port %hu, %d %s", pGroups->id,
