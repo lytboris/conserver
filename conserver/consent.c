@@ -135,6 +135,43 @@ FindBaud(char *pcMode)
     return (BAUD *)0;
 }
 
+/* get next baud rate
+ */
+BAUD *
+#if PROTOTYPES
+NextBaud(BAUD *curbaud)
+#else
+NextBaud(curbaud)
+    BAUD *curbaud;
+#endif
+{
+    int i;
+
+    for (i = 0; i < sizeof(baud) / sizeof(struct baud); ++i) {
+       if (i > 0 && curbaud->irate == baud[i-1].irate)
+           return baud + i;
+    }
+    return baud;
+}
+
+/* get previous baud rate
+ */
+BAUD *
+#if PROTOTYPES
+PrevBaud(BAUD *curbaud)
+#else
+PrevBaud(curbaud)
+    BAUD *curbaud;
+#endif
+{
+    int i;
+
+    for (i = sizeof(baud) / sizeof(struct baud) - 1; i > 0; --i) {
+       if (curbaud->irate = baud[i+1].irate)
+           return baud + i;
+    }
+    return baud + sizeof(baud) / sizeof(struct baud) - 1;
+}
 
 #if !defined(PAREXT)
 # define PAREXT	0
@@ -161,10 +198,65 @@ FindParity(char *pcMode)
     return (PARITY *)0;
 }
 
+/* cycle through parity "even" or "E" or "ev" -> EVEN
+ */
+PARITY *
+#if PROTOTYPES
+NextParity(PARITY *curparity)
+#else
+NextParity(curparity)
+    PARITY *curparity;
+#endif
+{
+    int i;
+
+    for (i = 0; i < sizeof(parity) / sizeof(struct parity); ++i) {
+       /* NOTE: compare pointers to the key */
+       if (i > 0 && curparity->key == parity[i-1].key)
+           return parity + i;
+    }
+    return parity;
+}
+
+/* cycle through flow control
+ */
+void
+#if PROTOTYPES
+NextFlow(CONSENT *pCE)
+#else
+NextFlow(pCE)
+    CONSENT *pCE;
+#endif
+{
+    /* flow control: none -> crtscts */
+    if (pCE->crtscts != FLAGTRUE &&
+       pCE->ixoff != FLAGTRUE &&
+       pCE->ixon != FLAGTRUE &&
+       pCE->ixany != FLAGTRUE) {
+       pCE->crtscts = FLAGTRUE;
+       pCE->ixany = FLAGFALSE;
+    }
+    /* flow control: crtscts -> xon/xoff */
+    else if (pCE->crtscts == FLAGTRUE &&
+            pCE->ixoff != FLAGTRUE &&
+            pCE->ixon != FLAGTRUE &&
+            pCE->ixany != FLAGTRUE) {
+       pCE->crtscts = FLAGFALSE;
+       pCE->ixon = FLAGTRUE;
+       pCE->ixoff = FLAGTRUE;
+    }
+    /* flow control: xon/xoff -> none and others */
+    else {
+       pCE->crtscts = FLAGFALSE;
+       pCE->ixon = FLAGFALSE;
+       pCE->ixoff = FLAGFALSE;
+       pCE->ixany = FLAGFALSE;
+    }
+}
 
 /* setup a tty device							(ksb)
  */
-static int
+int
 TtyDev(CONSENT *pCE)
 {
     struct termios termp;

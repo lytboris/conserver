@@ -3452,6 +3452,40 @@ DoClientRead(GRPENT *pGE, CONSCLIENT *pCLServing)
 			pCLServing->iState = S_NORMAL;
 			continue;
 
+                   case S_SERIAL: /* serial sequence */
+                       pCLServing->iState = S_NORMAL;
+                       if (!pCLServing->fwr) {
+                           FileWrite(pCLServing->fd, FLAGFALSE,
+                                   "attach to configure serial]\r\n", -1);
+                           continue;
+                       }
+                       if (pCEServing->type != DEVICE) {
+                           FileWrite(pCLServing->fd, FLAGFALSE,
+                                   "non-serial console not supported]\r\n", -1);
+                           continue;
+                       }
+
+                       switch (acIn[i]) {
+                           case 'u':
+                               pCEServing->baud = NextBaud(pCEServing->baud);
+                               break;
+                           case 'd':
+                               pCEServing->baud = PrevBaud(pCEServing->baud);
+                               break;
+                           case 'f':
+                               NextFlow(pCEServing);
+                               break;
+                           case 'y':
+                               pCEServing->parity = NextParity(pCEServing->parity);
+                               break;
+                           default:
+                               FileWrite(pCLServing->fd, FLAGFALSE,
+                                       "unknown attribute]\r\n", -1);
+                               continue;
+                       }
+                       TtyDev(pCEServing);
+                       continue;
+
 		    case S_SUSP:
 			if (!pCEServing->fup) {
 			    FileWrite(pCLServing->fd, FLAGFALSE,
@@ -3929,6 +3963,18 @@ DoClientRead(GRPENT *pGE, CONSCLIENT *pCLServing)
 				FileWrite(pCLServing->fd, FLAGFALSE,
 					  "spying]\r\n", -1);
 				break;
+
+                           case 'S':   /* serial settings */
+                               if (pCEServing->fronly) {
+                                   FileWrite(pCLServing->fd, FLAGFALSE,
+                                             "can't change serial settings for read-only console]\r\n",
+                                             -1);
+                                   continue;
+                               }
+                               pCLServing->iState = S_SERIAL;
+                               FileWrite(pCLServing->fd, FLAGFALSE,
+                                         "serialcfg ", -1);
+                               break;
 
 			    case 'u':	/* hosts on server this */
 				FileWrite(pCLServing->fd, FLAGFALSE,
