@@ -50,6 +50,7 @@ typedef enum clientState {
     S_REPLAY,			/* set replay length for 'r'               */
     S_PLAYBACK,			/* set replay length for 'p'               */
     S_NOTE,			/* send a note to the logfile              */
+    S_SERIAL,			/* configure serial                        */
     S_TASK,			/* invoke a task on the server side        */
     S_CONFIRM			/* confirm input                           */
 } CLIENTSTATE;

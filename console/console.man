@@ -881,6 +881,18 @@ set number of replay lines
 .B s
 switch to spy mode (read only)
 .TP
+.B Su
+serial baud up
+.TP
+.B Sd
+serial baud down
+.TP
+.B Sf
+cycle through flow control (RTS/CTS, XON/XOFF, none)
+.TP
+.B Sy
+cycle through parity settings (even, odd, none)
+.TP
 .B u
 show status of hosts/users in this group
 .TP
