@@ -135,6 +135,35 @@ FindBaud(char *pcMode)
     return (BAUD *)0;
 }
 
+/* get next baud rate
+ */
+BAUD *
+NextBaud(BAUD *curbaud)
+{
+    int i;
+    int num_elements = sizeof(baud) / sizeof(struct baud);
+
+    for (i = 0; i < num_elements; ++i) {
+       if (i > 0 && curbaud->irate == baud[i].irate)
+           return baud + i - 1;
+    }
+    return baud;
+}
+
+/* get previous baud rate
+ */
+BAUD *
+PrevBaud(BAUD *curbaud)
+{
+    int i;
+    int num_elements = sizeof(baud) / sizeof(struct baud);
+
+    for (i = 0; i < num_elements; ++i) {
+       if ( i < (num_elements - 1 ) && curbaud->irate == baud[i].irate)
+           return baud + i + 1;
+    }
+    return baud + num_elements - 1;
+}
 
 #if !defined(PAREXT)
 # define PAREXT	0
@@ -161,10 +190,55 @@ FindParity(char *pcMode)
     return (PARITY *)0;
 }
 
+/* cycle through parity "even" or "E" or "ev" -> EVEN
+ */
+PARITY *
+NextParity(PARITY *curparity)
+{
+    int i;
+
+    for (i = 0; i < sizeof(parity) / sizeof(struct parity); ++i) {
+       /* NOTE: compare pointers to the key */
+       if (i > 0 && curparity->key == parity[i-1].key)
+           return parity + i;
+    }
+    return parity;
+}
+
+/* cycle through flow control
+ */
+void
+NextFlow(CONSENT *pCE)
+{
+    /* flow control: none -> crtscts */
+    if (pCE->crtscts != FLAGTRUE &&
+       pCE->ixoff != FLAGTRUE &&
+       pCE->ixon != FLAGTRUE &&
+       pCE->ixany != FLAGTRUE) {
+       pCE->crtscts = FLAGTRUE;
+       pCE->ixany = FLAGFALSE;
+    }
+    /* flow control: crtscts -> xon/xoff */
+    else if (pCE->crtscts == FLAGTRUE &&
+            pCE->ixoff != FLAGTRUE &&
+            pCE->ixon != FLAGTRUE &&
+            pCE->ixany != FLAGTRUE) {
+       pCE->crtscts = FLAGFALSE;
+       pCE->ixon = FLAGTRUE;
+       pCE->ixoff = FLAGTRUE;
+    }
+    /* flow control: xon/xoff -> none and others */
+    else {
+       pCE->crtscts = FLAGFALSE;
+       pCE->ixon = FLAGFALSE;
+       pCE->ixoff = FLAGFALSE;
+       pCE->ixany = FLAGFALSE;
+    }
+}
 
 /* setup a tty device							(ksb)
  */
-static int
+int
 TtyDev(CONSENT *pCE)
 {
     struct termios termp;
@@ -250,8 +324,8 @@ TtyDev(CONSENT *pCE)
     /*
      * Set terminal attributes
      */
-    if (-1 == tcsetattr(cofile, TCSADRAIN, &termp)) {
-	Error("[%s] tcsetattr(%s(%d),TCSADRAIN): %s: forcing down",
+    if (-1 == tcsetattr(cofile, TCSAFLUSH, &termp)) {
+	Error("[%s] tcsetattr(%s(%d),TCSAFLUSH): %s: forcing down",
 	      pCE->server, pCE->device, cofile, strerror(errno));
 	ConsDown(pCE, FLAGTRUE, FLAGTRUE);
 	return -1;
