@@ -3467,12 +3467,17 @@ DoClientRead(GRPENT *pGE, CONSCLIENT *pCLServing)
 
                        switch (acIn[i]) {
                            case 'u':
-                               pCEServing->baud = NextBaud(pCEServing->baud);
-                               FileWrite(pCLServing->fd, FLAGFALSE, (pCEServing->baud)->acrate, 8);
-                               break;
                            case 'd':
-                               pCEServing->baud = PrevBaud(pCEServing->baud);
-                               FileWrite(pCLServing->fd, FLAGFALSE, (pCEServing->baud)->acrate, 8);
+                               switch (acIn[i]) {
+                                   case 'u':
+                                       pCEServing->baud = NextBaud(pCEServing->baud);
+                                       break;
+                                   case 'd':
+                                       pCEServing->baud = PrevBaud(pCEServing->baud);
+                                       break;
+                               }
+                               FileWrite(pCLServing->fd, FLAGFALSE, "baud @ ", -1);
+                               FileWrite(pCLServing->fd, FLAGFALSE, (pCEServing->baud)->acrate, -1);
                                break;
                            case 'f':
                                NextFlow(pCEServing);
@@ -3485,6 +3490,7 @@ DoClientRead(GRPENT *pGE, CONSCLIENT *pCLServing)
                                        "unknown attribute]\r\n", -1);
                                continue;
                        }
+                       FileWrite(pCLServing->fd, FLAGFALSE, "]\r\n", -1);
                        TtyDev(pCEServing);
                        continue;
 
